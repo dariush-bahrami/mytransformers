@@ -34,6 +34,10 @@ class EncoderLayer(nn.Module):
         self.layer_norm_2 = nn.LayerNorm(embedding_dimension)
         self.attenion = MultiHeadAttention(
             embedding_dimension,
+            embedding_dimension,
+            embedding_dimension,
+            embedding_dimension,
+            embedding_dimension,
             number_of_heads,
             attention_dropout_p,
         )
@@ -63,7 +67,8 @@ class DecoderLayer(nn.Module):
     attention is all you need.
 
     Args:
-        embedding_dimension (int): The embedding dimension of the input.
+        encoder_embedding_dimension (int): The embedding dimension of the encoder.
+        decoder_embedding_dimension (int): The embedding dimension of the decoder.
         number_of_heads (int): The number of attention heads.
         attention_dropout_p (float): The probability of dropping out a value in the
             attention weights.
@@ -75,28 +80,37 @@ class DecoderLayer(nn.Module):
 
     def __init__(
         self,
-        embedding_dimension: int,
+        encoder_embedding_dimension: int,
+        decoder_embedding_dimension: int,
         number_of_heads: int,
         attention_dropout_p: float,
         feedforward_dimension: int,
         feedforward_dropout_p: float,
     ):
         super().__init__()
-        self.layer_norm_1 = nn.LayerNorm(embedding_dimension)
-        self.layer_norm_2 = nn.LayerNorm(embedding_dimension)
-        self.layer_norm_3 = nn.LayerNorm(embedding_dimension)
+        self.layer_norm_1 = nn.LayerNorm(decoder_embedding_dimension)
+        self.layer_norm_2 = nn.LayerNorm(decoder_embedding_dimension)
+        self.layer_norm_3 = nn.LayerNorm(decoder_embedding_dimension)
         self.attenion_1 = MultiHeadAttention(
-            embedding_dimension,
+            decoder_embedding_dimension,
+            decoder_embedding_dimension,
+            decoder_embedding_dimension,
+            decoder_embedding_dimension,
+            decoder_embedding_dimension,
             number_of_heads,
             attention_dropout_p,
         )
         self.attenion_2 = MultiHeadAttention(
-            embedding_dimension,
+            decoder_embedding_dimension,
+            encoder_embedding_dimension,
+            encoder_embedding_dimension,
+            decoder_embedding_dimension,
+            decoder_embedding_dimension,
             number_of_heads,
             attention_dropout_p,
         )
         self.feedforward = PositionWiseFeedForward(
-            embedding_dimension,
+            decoder_embedding_dimension,
             feedforward_dimension,
             feedforward_dropout_p,
         )
@@ -109,11 +123,13 @@ class DecoderLayer(nn.Module):
         """Apply the decoder on the embeddings.
 
         Args:
-            embeddings (torch.Tensor): (B, S1, E)
-            encoder_outputs (torch.Tensor): (B, S2, E)
+            embeddings (torch.Tensor): (B, S1, E1) The E1 is the decoder embedding
+                dimension.
+            encoder_outputs (torch.Tensor): (B, S2, E2) The E2 is the encoder embedding
+                dimension.
 
         Returns:
-            torch.Tensor: (B, S1, E)
+            torch.Tensor: (B, S1, E1)
         """
         # First attention block (masked self-attention)
         batch_size, sequence_length, embedding_dimension = embeddings.shape
@@ -159,6 +175,10 @@ class CausalLayer(nn.Module):
         self.layer_norm_1 = nn.LayerNorm(embedding_dimension)
         self.layer_norm_2 = nn.LayerNorm(embedding_dimension)
         self.attenion = MultiHeadAttention(
+            embedding_dimension,
+            embedding_dimension,
+            embedding_dimension,
+            embedding_dimension,
             embedding_dimension,
             number_of_heads,
             attention_dropout_p,
