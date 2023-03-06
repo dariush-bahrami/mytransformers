@@ -41,10 +41,10 @@ class ScaledDotProductAttention(nn.Module):
         Returns:
             Tensor: (B, S1, E2)
         """
-        embed_dim = query.size(-1)
-        scores = torch.bmm(query, key.transpose(1, 2)) / (embed_dim**0.5)
+        dk = key.shape[-1]
+        scores = torch.bmm(query, key.transpose(1, 2)) / (dk**0.5)
         if attention_mask is not None:
-            scores = scores.masked_fill(attention_mask == False, float("-inf"))
+            scores = torch.masked_fill(scores, attention_mask == False, float("-inf"))
         weights = torch.softmax(scores, dim=-1)
         weights = self.dropout(weights)
         attn_outputs = torch.bmm(weights, value)
