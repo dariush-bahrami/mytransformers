@@ -22,25 +22,24 @@ class ScaledDotProductAttention(nn.Module):
         attention_mask: torch.Tensor = None,
     ) -> torch.Tensor:
         """Scaled dot product attention. All inputs shapes are in the form of (B, S, E)
-        where B is the batch size, S is the sequence length, and E is theembedding
+        where B is the batch size, S is the sequence length, and E is the embedding
         dimension.
 
-        Note:
-            query, key, and value must all have the same embedding and batch dimensions.
-            sequence length of key and value must be the same but they can be different
-            from the sequence length of query. The output sequence length will be the
-            same as the sequence length of query.
+        Note About Shapes:
+            - The batch dimension of query, key, and value must be the same.
+            - The sequence dimension of the key and value must be the same.
+            - The embedding dimension of query and key must be the same.
 
         Args:
-            query (Tensor): (B, S1, E)
-            key (Tensor): (B, S2, E)
-            value (Tensor): (B, S2, E)
+            query (Tensor): (B, S1, E1)
+            key (Tensor): (B, S2, E1)
+            value (Tensor): (B, S2, E2)
             attention_mask (Tensor, optional): (B, S1, S2). Defaults to None. The dtype
                 of the mask should be torch.bool. False means that the corresponding
                 attention weight should be zeroed out.
 
         Returns:
-            Tensor: (B, S1, E)
+            Tensor: (B, S1, E2)
         """
         embed_dim = query.size(-1)
         scores = torch.bmm(query, key.transpose(1, 2)) / (embed_dim**0.5)
