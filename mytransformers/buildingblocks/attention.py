@@ -3,7 +3,7 @@ from torch import nn
 
 
 class ScaledDotProductAttention(nn.Module):
-    """Scaled dot product attention. Identical to the one in the original paper.
+    """Scaled dot product attention.
 
     Args:
         dropout_p (float): The probability of dropping out a value in the attention
@@ -55,21 +55,42 @@ class AttentionHead(nn.Module):
     """Single attention head. This is used in the MultiHeadAttention module.
 
     Args:
-        embedding_dimension (int): The embedding dimension of the input.
-        head_dimension (int): The dimension of the attention head.
+        query_embedding_dimension (int): The embedding dimension of the query.
+        key_embedding_dimension (int): The embedding dimension of the key.
+        value_embedding_dimension (int): The embedding dimension of the value.
+        query_and_key_projection_dimension (int): The projection dimension of the query
+            and key.
+        value_projection_dimension (int): The projection dimension of the value.
         dropout_p (float): The probability of dropping out a value in the attention
-            weights. This is the same as the dropout_p in the ScaledDotProductAttention
-            module.
+            weights.
     """
 
-    def __init__(self, embedding_dimension: int, head_dimension: int, dropout_p: float):
+    def __init__(
+        self,
+        query_embedding_dimension: int,
+        key_embedding_dimension: int,
+        value_embedding_dimension: int,
+        query_and_key_projection_dimension: int,
+        value_projection_dimension: int,
+        dropout_p: float,
+    ):
         super().__init__()
         self.scaled_dot_product_attention = ScaledDotProductAttention(dropout_p)
-        self.embedding_dimension = embedding_dimension
-        self.head_dimension = head_dimension
-        self.query_projector = nn.Linear(embedding_dimension, head_dimension)
-        self.key_projector = nn.Linear(embedding_dimension, head_dimension)
-        self.value_projector = nn.Linear(embedding_dimension, head_dimension)
+        self.query_embedding_dimension = query_embedding_dimension
+        self.key_embedding_dimension = key_embedding_dimension
+        self.value_embedding_dimension = value_embedding_dimension
+        self.query_and_key_projection_dimension = query_and_key_projection_dimension
+        self.value_projection_dimension = value_projection_dimension
+
+        self.query_projector = nn.Linear(
+            query_embedding_dimension, query_and_key_projection_dimension
+        )
+        self.key_projector = nn.Linear(
+            key_embedding_dimension, query_and_key_projection_dimension
+        )
+        self.value_projector = nn.Linear(
+            value_embedding_dimension, value_projection_dimension
+        )
 
     def forward(
         self,
@@ -78,13 +99,17 @@ class AttentionHead(nn.Module):
         value: torch.Tensor,
         attention_mask: torch.Tensor = None,
     ) -> torch.Tensor:
-        """Single attention head. For more details, see the docstrings of the
+        """Single attention head. This module frist performs a linear projection on the
+        query, key, and value tensors based on the embedding dimensions and projection
+        dimensions. Then, it performs the scaled dot product attention. Because of the
+        projection operations query, key, and value can have different embedding
+        dimensions. Other shape constraints are the same as the
         ScaledDotProductAttention.
 
         Args:
-            query (Tensor): (B, S1, E)
-            key (Tensor): (B, S2, E)
-            value (Tensor): (B, S2, E)
+            query (Tensor): (B, S1, E1)
+            key (Tensor): (B, S2, E2)
+            value (Tensor): (B, S2, E3)
             attention_mask (Tensor, optional): (B, S1, S2). Defaults to None.
 
         Returns:
@@ -105,7 +130,12 @@ class MultiHeadAttention(nn.Module):
     """Multi-head attention.
 
     Args:
-        embedding_dimension (int): The embedding dimension of the input.
+        query_embedding_dimension (int): The embedding dimension of the query.
+        key_embedding_dimension (int): The embedding dimension of the key.
+        value_embedding_dimension (int): The embedding dimension of the value.
+        query_and_key_projection_dimension (int): The projection dimension of the query
+            and key.
+        value_projection_dimension (int): The projection dimension of the value.
         number_of_heads (int): The number of attention heads.
         dropout_p (float): The probability of dropping out a value in the attention
             weights.
@@ -113,22 +143,43 @@ class MultiHeadAttention(nn.Module):
 
     def __init__(
         self,
-        embedding_dimension: int,
+        query_embedding_dimension: int,
+        key_embedding_dimension: int,
+        value_embedding_dimension: int,
+        query_and_key_projection_dimension: int,
+        value_projection_dimension: int,
         number_of_heads: int,
         dropout_p: float,
     ):
         super().__init__()
-        self.embedding_dimension = embedding_dimension
+        self.query_embedding_dimension = query_embedding_dimension
+        self.key_embedding_dimension = key_embedding_dimension
+        self.value_embedding_dimension = value_embedding_dimension
+        self.query_and_key_projection_dimension = query_and_key_projection_dimension
+        self.value_projection_dimension = value_projection_dimension
         self.number_of_heads = number_of_heads
-        self.head_dimension = embedding_dimension // number_of_heads
-        self.heads = nn.ModuleList(
-            [
-                AttentionHead(embedding_dimension, self.head_dimension, dropout_p)
-                for _ in range(number_of_heads)
-            ]
+        self.dropout_p = dropout_p
+        self.each_head_query_and_key_projection_dimension = (
+            query_and_key_projection_dimension // number_of_heads
         )
+        self.each_head_value_projection_dimension = (
+            value_projection_dimension // number_of_heads
+        )
+        self.heads = nn.ModuleList()
+        for _ in range(number_of_heads):
+            self.heads.append(
+                AttentionHead(
+                    query_embedding_dimension,
+                    key_embedding_dimension,
+                    value_embedding_dimension,
+                    self.each_head_query_and_key_projection_dimension,
+                    self.each_head_value_projection_dimension,
+                    dropout_p,
+                )
+            )
         self.output_projector = nn.Linear(
-            self.head_dimension * number_of_heads, embedding_dimension
+            self.each_head_value_projection_dimension * number_of_heads,
+            value_projection_dimension,
         )
 
     def forward(
@@ -138,19 +189,22 @@ class MultiHeadAttention(nn.Module):
         value: torch.Tensor,
         attention_mask: torch.Tensor = None,
     ) -> torch.Tensor:
-        """Multi-head attention. For more details, see the docstrings of the
-        ScaledDotProductAttention.
+        """Multi-head attention. This module pass the query, key, and value tensors
+        through multiple attention heads. The output of each attention head is then
+        concatenated and passed through a linear layer.
+
 
         Args:
-            query (Tensor): (B, S1, E)
-            key (Tensor): (B, S2, E)
-            value (Tensor): (B, S2, E)
+            query (Tensor): (B, S1, E1)
+            key (Tensor): (B, S2, E2)
+            value (Tensor): (B, S2, E3)
             attention_mask (Tensor, optional): (B, S1, S2). Defaults to None.
 
         Returns:
-            Tensor: (B, S1, E)
+            Tensor: (B, S1, E4) where E4 refers to the value projection dimension.
         """
-        attn_outputs = torch.cat(
-            [head(query, key, value, attention_mask) for head in self.heads], dim=-1
-        )
-        return self.output_projector(attn_outputs)
+        head_outputs = []
+        for head in self.heads:
+            head_outputs.append(head(query, key, value, attention_mask))
+        concatenated_head_outputs = torch.cat(head_outputs, dim=-1)
+        return self.output_projector(concatenated_head_outputs)
