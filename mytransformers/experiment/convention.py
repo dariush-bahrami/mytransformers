@@ -6,12 +6,12 @@ the paper "Attention is all you need".
 
 List of implemented PyTorch Modules:
     PositionalEncoding2D: This module concatenates the X and Y coordinates of the
-        input tensor as two additional channels. X and Y coordinates are normalized
-        between -1 and 1 where (0, 0) is the center of the image.
+        input tensor as two additional channels to it. X and Y coordinates are
+        normalized between -1 and 1 where (0, 0) is the center of the image.
 
     Convention: This module implements the self attention based convolutional block.
         The input tensor is first passed through three convolutional layers to obtain
-        the query, key and value tensors. Then, the query and key tensors are passed
+        the query, key and value tensors. Then, these three tensors are passed through
         self attention layer to obtain the attention output.
 
     ResidualConvention: This module implements the residual connection between the
