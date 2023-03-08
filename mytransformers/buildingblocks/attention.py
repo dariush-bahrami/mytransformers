@@ -51,6 +51,59 @@ class ScaledDotProductAttention(nn.Module):
         return attn_outputs
 
 
+class PermutedScaledDotProductAttention(nn.Module):
+    """Permuted Scaled dot product attention.
+
+    This is the same as ScaledDotProductAttention except that the embedding dimension
+    is the first dimension of the query, key, and value tensors. This is useful for
+    convolutional attention.
+
+    Args:
+        dropout_p (float): The probability of dropping out a value in the attention
+            weights.
+    """
+
+    def __init__(self, dropout_p: float):
+        super().__init__()
+        self.dropout = nn.Dropout(dropout_p)
+
+    def forward(
+        self,
+        query: torch.Tensor,
+        key: torch.Tensor,
+        value: torch.Tensor,
+        attention_mask: torch.Tensor = None,
+    ) -> torch.Tensor:
+        """Scaled dot product attention. All inputs shapes are in the form of (B, S, E)
+        where B is the batch size, S is the sequence length, and E is the embedding
+        dimension.
+
+        Note About Shapes:
+            - The batch dimension of query, key, and value must be the same.
+            - The sequence dimension of the key and value must be the same.
+            - The embedding dimension of query and key must be the same.
+
+        Args:
+            query (Tensor): (B, E1, S1)
+            key (Tensor): (B, E1, S2)
+            value (Tensor): (B, E2, S2)
+            attention_mask (Tensor, optional): (B, S1, S2). Defaults to None. The dtype
+                of the mask should be torch.bool. False means that the corresponding
+                attention weight should be zeroed out.
+
+        Returns:
+            Tensor: (B, E2, S1)
+        """
+        dk = key.shape[-2]
+        scores = torch.bmm(query.transpose(1, 2), key) / (dk**0.5)
+        if attention_mask is not None:
+            scores = torch.masked_fill(scores, attention_mask == False, float("-inf"))
+        weights = torch.softmax(scores, dim=-1)
+        weights = self.dropout(weights)
+        attn_outputs = torch.bmm(value, weights.transpose(1, 2))
+        return attn_outputs
+
+
 class AttentionHead(nn.Module):
     """Single attention head. This is used in the MultiHeadAttention module.
 
