@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 from torch import nn
 
@@ -19,7 +21,7 @@ class ScaledDotProductAttention(nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         value: torch.Tensor,
-        attention_mask: torch.Tensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """Scaled dot product attention. All inputs shapes are in the form of (B, S, E)
         where B is the batch size, S is the sequence length, and E is the embedding
@@ -72,7 +74,7 @@ class PermutedScaledDotProductAttention(nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         value: torch.Tensor,
-        attention_mask: torch.Tensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """Scaled dot product attention. All inputs shapes are in the form of (B, S, E)
         where B is the batch size, S is the sequence length, and E is the embedding
@@ -150,7 +152,7 @@ class AttentionHead(nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         value: torch.Tensor,
-        attention_mask: torch.Tensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """Single attention head. This module frist performs a linear projection on the
         query, key, and value tensors based on the embedding dimensions and projection
@@ -240,7 +242,7 @@ class MultiHeadAttention(nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         value: torch.Tensor,
-        attention_mask: torch.Tensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """Multi-head attention. This module pass the query, key, and value tensors
         through multiple attention heads. The output of each attention head is then
