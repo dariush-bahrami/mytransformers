@@ -10,7 +10,7 @@ SelfAttentionFixedResize and SelfAttentionResize are implemented using this mind
 import torch
 from torch import nn
 
-from ..buildingblocks.attention import PermutedScaledDotProductAttention
+from ...buildingblocks.attention import PermutedScaledDotProductAttention
 
 
 class PositionalEncoding2D(nn.Module):
@@ -125,14 +125,17 @@ class Convention(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch_size = x.shape[0]
+
         query = self.query_convolution(x)
         output_height = query.shape[2]
         output_width = query.shape[3]
         key = self.key_convolution(x)
         value = self.value_convolution(x)
+
         query = self.flatten(query)
         key = self.flatten(key)
         value = self.flatten(value)
+
         attention_output = self.attention(query, key, value)
         output = attention_output.view(
             batch_size,
