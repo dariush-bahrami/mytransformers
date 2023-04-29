@@ -131,18 +131,18 @@ class EncoderDecoderTransformer(nn.Module):
 
     def forward(
         self,
-        encoder_inputs_embeddings: Tensor,
-        decoder_inputs_embeddings: Tensor,
+        encoder_embeddings: Tensor,
+        decoder_embeddings: Tensor,
         encoder_attention_mask: Optional[torch.Tensor] = None,
         decoder_attention_mask: Optional[torch.Tensor] = None,
     ) -> Tensor:
-        encoder_output_embeddings = self.encoder(
-            encoder_inputs_embeddings,
+        encoder_embeddings = self.encoder(
+            encoder_embeddings,
             encoder_attention_mask,
         )
-        decoder_output_embeddings = self.decoder(
-            decoder_inputs_embeddings,
-            encoder_output_embeddings,
+        decoder_embeddings = self.decoder(
+            decoder_embeddings,
+            encoder_embeddings,
             decoder_attention_mask,
         )
-        return decoder_output_embeddings
+        return encoder_embeddings, decoder_embeddings
