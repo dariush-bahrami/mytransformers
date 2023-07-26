@@ -53,6 +53,18 @@ class ScaledDotProductAttention(nn.Module):
         return attn_outputs
 
 
+class ScaledDotProductSelfAttention(ScaledDotProductAttention):
+    def forward(self, embeddings: torch.Tensor) -> torch.Tensor:
+        """Scaled dot product self attention.
+        Args:
+            embeddings (Tensor): (B, S, E)
+
+        Returns:
+            Tensor: (B, S, E)
+        """
+        return super().forward(embeddings, embeddings, embeddings)
+
+
 class PermutedScaledDotProductAttention(nn.Module):
     """Permuted Scaled dot product attention.
 
