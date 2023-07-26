@@ -49,6 +49,24 @@ def scaled_dot_product_self_attention(embeddings: torch.Tensor) -> torch.Tensor:
     return attn_outputs
 
 
+class WeightedSequencePooling(nn.Module):
+    def __init__(self, sequence_length: int):
+        super().__init__()
+        self.weights = nn.Parameter(torch.empty(1, sequence_length))
+        nn.init.kaiming_uniform_(self.weights, a=math.sqrt(5))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Weighted sequence pooling forward pass.
+
+        Args:
+            x (Tensor): (B, S, E)
+
+        Returns:
+            Tensor: (B, E)
+        """
+        return self.weights @ x
+
+
 class MultiHeadFullyConnectedSelfAttention(nn.Module):
     """Multi head fully connected self attention. This module applies fully connected
     blocks to the input embeddings in parallel and then applies scaled dot product
@@ -72,8 +90,7 @@ class MultiHeadFullyConnectedSelfAttention(nn.Module):
                 for _ in range(num_heads)
             ]
         )
-        self.heads_projection = nn.Parameter(torch.empty(1, num_heads))
-        nn.init.kaiming_uniform_(self.heads_projection, a=math.sqrt(5))
+        self.heads_pooling = WeightedSequencePooling(num_heads)
         self.output_projection = nn.Linear(
             heads_dim,
             embedding_dim,
@@ -94,7 +111,7 @@ class MultiHeadFullyConnectedSelfAttention(nn.Module):
         embeddings = torch.stack([h(x) for h in self.heads], dim=1)  # (B, Nh, Eh)
         embeddings = scaled_dot_product_self_attention(embeddings)  # (B, Nh, Eh)
         embeddings = self.output_projection(embeddings)  # (B, Nh, E)
-        embeddings = self.heads_projection @ embeddings  # (B, 1, E)
+        embeddings = self.heads_pooling(embeddings)  # (B, 1, E)
         embeddings = embeddings.squeeze(dim=1)  # (B, E)
         return x + embeddings
 
