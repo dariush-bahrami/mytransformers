@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from ...buildingblocks.attention import ScaledDotProductSelfAttention
+from ...buildingblocks.attention import ScaledDotProductAttention
 from ...buildingblocks.pooling import FixedLengthWeightedSequencePooling
 
 
@@ -57,7 +57,7 @@ class MultiHeadFullyConnectedSelfAttention(nn.Module):
                 for _ in range(num_heads)
             ]
         )
-        self.attention = ScaledDotProductSelfAttention(dropout_p=attention_dropout_p)
+        self.attention = ScaledDotProductAttention(dropout_p=attention_dropout_p)
         self.heads_pooling = FixedLengthWeightedSequencePooling(num_heads)
         self.output_projection = nn.Linear(
             heads_dim,
@@ -77,7 +77,7 @@ class MultiHeadFullyConnectedSelfAttention(nn.Module):
         # Note: B = batch size, E = input embedding dim, S = sequence length,
         # Nh = number of heads, Eh = head embedding dim
         embeddings = torch.stack([h(x) for h in self.heads], dim=1)  # (B, Nh, Eh)
-        embeddings = self.attention(embeddings)  # (B, Nh, Eh)
+        embeddings = self.attention(embeddings, embeddings, embeddings)  # (B, Nh, Eh)
         embeddings = self.output_projection(embeddings)  # (B, Nh, E)
         embeddings = self.heads_pooling(embeddings)  # (B, 1, E)
         embeddings = embeddings.squeeze(dim=1)  # (B, E)
@@ -97,22 +97,26 @@ class VectorTransformer(nn.Module):
         out_features: int,
         embedding_dim: int,
         heads_dim: int,
-        dropout_p: float,
         num_heads: int,
         num_layers: int,
+        fully_connected_dropout_p: float,
+        attention_dropout_p: float,
     ) -> None:
         super().__init__()
         # Non learnable input normalizer just to make sure that the input embeddings
         # are normalized.
         self.input_normalizer = nn.BatchNorm1d(in_features, affine=False)
-        self.input_layer = FullyConnectedBlock(in_features, embedding_dim, dropout_p)
+        self.input_layer = FullyConnectedBlock(
+            in_features, embedding_dim, fully_connected_dropout_p
+        )
         self.hidden_layers = nn.Sequential(
             *[
                 MultiHeadFullyConnectedSelfAttention(
                     embedding_dim,
                     heads_dim,
-                    dropout_p,
                     num_heads,
+                    fully_connected_dropout_p,
+                    attention_dropout_p,
                 )
                 for _ in range(num_layers)
             ]
