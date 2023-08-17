@@ -24,7 +24,7 @@ class FixedLengthWeightedSequencePooling(nn.Module):
         return self.weights @ x
 
 
-class AttentionSequencePooling(nn.Moudle):
+class AttentionSequencePooling(nn.Module):
     """Attention sequence pooling module.
 
     Args:
