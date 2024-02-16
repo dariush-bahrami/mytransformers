@@ -5,7 +5,7 @@ from torch import nn
 
 from .attention import MultiHeadAttention
 from .feedforward import PositionWiseFeedForward
-from .utils import get_shifted_right_attention_mask
+from .utils import get_causal_attention_mask
 
 
 class EncoderLayer(nn.Module):
@@ -285,9 +285,9 @@ class CausalLayer(nn.Module):
         """
         batch_size, sequence_length, embedding_dimension = embeddings.shape
         device = embeddings.device
-        attention_mask = get_shifted_right_attention_mask(
-            batch_size, sequence_length
-        ).to(device)
+        attention_mask = get_causal_attention_mask(batch_size, sequence_length).to(
+            device
+        )
         query = key = value = self.layer_norm_1(embeddings)
         embeddings = self.attenion(query, key, value, attention_mask) + embeddings
         embeddings = self.feedforward(self.layer_norm_2(embeddings)) + embeddings

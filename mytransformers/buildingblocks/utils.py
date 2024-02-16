@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 
-def get_shifted_right_attention_mask(
+def get_causal_attention_mask(
     batch_size: int,
     sequence_length: int,
 ) -> torch.Tensor:
