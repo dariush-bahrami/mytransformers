@@ -285,7 +285,7 @@ class CausalLayer(nn.Module):
         """
         batch_size, sequence_length, embedding_dimension = embeddings.shape
         device = embeddings.device
-        attention_mask = get_causal_attention_mask(batch_size, sequence_length).to(
+        attention_mask = get_causal_attention_mask(sequence_length, sequence_length).to(
             device
         )
         query = key = value = self.layer_norm_1(embeddings)
