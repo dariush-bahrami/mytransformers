@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 from torch import Tensor, nn
 
-from ..buildingblocks.layers import GeneralMultiHeadAttentionLayer
+from ..building_blocks.layers import GeneralMultiHeadAttentionLayer
 
 
 class MultiHeadSelfAttentionLayer(GeneralMultiHeadAttentionLayer):

@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from ...buildingblocks.attention import PermutedScaledDotProductAttention
+from ...building_blocks.attention import PermutedScaledDotProductAttention
 
 
 class Convention(nn.Module):

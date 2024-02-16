@@ -1,8 +1,8 @@
 import torch
 from torch import nn
 
-from ..buildingblocks.attention import ScaledDotProductAttention
-from ..buildingblocks.pooling import FixedLengthWeightedSequencePooling
+from ..building_blocks.attention import ScaledDotProductAttention
+from ..building_blocks.pooling import FixedLengthWeightedSequencePooling
 
 
 class FullyConnectedBlock(nn.Module):

@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from .attention import MultiHeadAttention
-from .feedforward import PositionWiseFeedForward
+from .feed_forward import PositionWiseFeedForward
 
 
 class GeneralMultiHeadAttentionLayer(nn.Module):

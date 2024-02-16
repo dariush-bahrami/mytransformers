@@ -7,6 +7,6 @@ the code is inspired by Andrej karpathy's nanoGPT github repository.
 """
 
 from .layers import CausalLayer, DecoderLayer, EncoderLayer
-from .positionalencoding import LearnablePositionalEncoder, SinusoidalPositionalEncoder
+from .positional_encoding import LearnablePositionalEncoder, SinusoidalPositionalEncoder
 from .tokenembedding import TokenEmbedder
 from .utils import get_causal_attention_mask
