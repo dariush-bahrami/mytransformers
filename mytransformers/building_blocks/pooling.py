@@ -6,10 +6,10 @@ from torch import nn
 from .attention import ScaledDotProductAttention
 
 
-class FixedLengthWeightedSequencePooling(nn.Module):
-    def __init__(self, sequence_length: int):
+class FixedInputSequenceLengthPooling(nn.Module):
+    def __init__(self, input_sequence_length: int):
         super().__init__()
-        self.weights = nn.Parameter(torch.empty(1, sequence_length))
+        self.weights = nn.Parameter(torch.empty(1, input_sequence_length))
         nn.init.kaiming_uniform_(self.weights, a=math.sqrt(5))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -24,7 +24,7 @@ class FixedLengthWeightedSequencePooling(nn.Module):
         return self.weights @ x
 
 
-class AttentionSequencePooling(nn.Module):
+class FixedOutputSequenceLengthPooling(nn.Module):
     """Attention sequence pooling module.
 
     Args:
@@ -36,8 +36,8 @@ class AttentionSequencePooling(nn.Module):
 
     def __init__(
         self,
-        embedding_dimension: int,
         output_sequence_length: int,
+        embedding_dimension: int,
         attention_dropout_p: float,
     ):
         super().__init__()

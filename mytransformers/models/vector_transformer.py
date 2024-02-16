@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 from ..building_blocks.attention import ScaledDotProductAttention
-from ..building_blocks.pooling import FixedLengthWeightedSequencePooling
+from ..building_blocks.pooling import FixedInputSequenceLengthPooling
 
 
 class FullyConnectedBlock(nn.Module):
@@ -58,7 +58,7 @@ class MultiHeadFullyConnectedSelfAttention(nn.Module):
             ]
         )
         self.attention = ScaledDotProductAttention(dropout_p=attention_dropout_p)
-        self.heads_pooling = FixedLengthWeightedSequencePooling(num_heads)
+        self.heads_pooling = FixedInputSequenceLengthPooling(num_heads)
         self.output_projection = nn.Linear(
             heads_dim,
             embedding_dim,
