@@ -36,7 +36,7 @@ class ScaledDotProductAttention(nn.Module):
             query (Tensor): (B, S1, E1)
             key (Tensor): (B, S2, E1)
             value (Tensor): (B, S2, E2)
-            attention_mask (Tensor, optional): (B, S1, S2). Defaults to None. The dtype
+            attention_mask (Tensor, optional): (S1, S2). Defaults to None. The dtype
                 of the mask should be torch.bool. False means that the corresponding
                 attention weight should be zeroed out.
 
