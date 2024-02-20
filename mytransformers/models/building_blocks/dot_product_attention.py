@@ -4,18 +4,6 @@ from typing import Optional, Union
 import torch
 from torch import nn
 
-# def robust_softmax(x, dim):
-#     """Numerically stable softmax."""
-#     x_max, _ = x.max(dim=dim, keepdim=True)
-#     # replace inf with 0 to avoid overflow
-#     x_max.masked_fill_(~torch.isfinite(x_max), 0.0)
-#     x = x - x_max
-#     x_exp = x.exp()
-#     x_exp_sum = x_exp.sum(dim=dim, keepdim=True)
-#     # replace 0 with 1 to avoid division by zero
-#     x_exp_sum = (x_exp_sum == 0.0) + x_exp_sum
-#     return x_exp / x_exp_sum
-
 
 class DotProductAttention(nn.Module):
     """Scaled dot product attention.
@@ -68,8 +56,6 @@ class DotProductAttention(nn.Module):
             scores += bias
 
         weights = torch.softmax(scores, dim=-1)
-        # replace NaN with 0
-        # weights = torch.nan_to_num(weights, nan=0.0)
         weights = self.dropout(weights)
         attn_outputs = torch.bmm(weights, value)
         return attn_outputs
