@@ -52,6 +52,7 @@ class AttentionHead(nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         value: torch.Tensor,
+        attention_scale: Optional[torch.Tensor] = None,
         attention_bias: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """Single attention head. This module frist performs a linear projection on the
@@ -65,8 +66,10 @@ class AttentionHead(nn.Module):
             query (Tensor): (B, S1, E1)
             key (Tensor): (B, S2, E2)
             value (Tensor): (B, S2, E3)
-            attention_bias (Tensor, optional): (S1, S2) or (B, S1, S2). Defaults to
-                None. This value is added to the scores before the softmax operation.
+            attention_scale (Tensor, optional): (Broadcastable to (B, S1, S2)). Defaults
+                to None. If None, it is set to 1 / sqrt(E1).
+            attention_bias (Tensor, optional): (Broadcastable to (B, S1, S2)). Defaults
+                to None. This value is added to the scores before the softmax operation.
 
         Returns:
             Tensor: (B, S1, E)
@@ -78,5 +81,6 @@ class AttentionHead(nn.Module):
             projected_query,
             projected_key,
             projected_value,
+            scale=attention_scale,
             bias=attention_bias,
         )
