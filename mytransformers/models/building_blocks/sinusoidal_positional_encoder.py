@@ -15,13 +15,10 @@ class SinusoidalPositionalEncoder(nn.Module):
         pe[:, 1::2] = torch.cos(position * div_term)
         return pe
 
-    def __init__(
-        self, embedding_dimension: int, max_sequence_length: int, dropout_p: float
-    ):
+    def __init__(self, embedding_dimension: int, max_sequence_length: int):
         super().__init__()
         self.embedding_dimension = embedding_dimension
         self.max_sequence_length = max_sequence_length
-        self.dropout = nn.Dropout(dropout_p)
         self.register_buffer(
             "positional_encodings",
             self.get_positional_encodings(embedding_dimension, max_sequence_length),
@@ -30,5 +27,4 @@ class SinusoidalPositionalEncoder(nn.Module):
     def forward(self, embeddings: torch.Tensor):
         batch_size, sequence_length, embedding_dimension = embeddings.shape
         embeddings = embeddings + self.positional_encodings[:sequence_length]
-        embeddings = self.dropout(embeddings)
         return embeddings
