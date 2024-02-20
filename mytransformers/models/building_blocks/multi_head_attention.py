@@ -67,6 +67,7 @@ class MultiHeadAttention(nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         value: torch.Tensor,
+        attention_scale: Optional[torch.Tensor] = None,
         attention_bias: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """Multi-head attention. This module pass the query, key, and value tensors
@@ -78,14 +79,24 @@ class MultiHeadAttention(nn.Module):
             query (Tensor): (B, S1, E1)
             key (Tensor): (B, S2, E2)
             value (Tensor): (B, S2, E3)
-            attention_bias (Tensor, optional): (S1, S2) or (B, S1, S2). Defaults to
-                None. This value is added to the scores before the softmax operation.
+            attention_scale (Tensor, optional): (Broadcastable to (B, S1, S2)). Defaults
+                to None. If None, it is set to 1 / sqrt(E1).
+            attention_bias (Tensor, optional): (Broadcastable to (B, S1, S2)). Defaults
+                to None. This value is added to the scores before the softmax operation.
 
         Returns:
             Tensor: (B, S1, E4) where E4 refers to the value projection dimension.
         """
         head_outputs = []
         for head in self.heads:
-            head_outputs.append(head(query, key, value, attention_bias=attention_bias))
+            head_outputs.append(
+                head(
+                    query,
+                    key,
+                    value,
+                    attention_scale=attention_scale,
+                    attention_bias=attention_bias,
+                )
+            )
         concatenated_head_outputs = torch.cat(head_outputs, dim=-1)
         return self.output_projector(concatenated_head_outputs)

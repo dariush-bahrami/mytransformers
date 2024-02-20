@@ -59,6 +59,7 @@ class SequenceTransformerBlock(nn.Module):
         queries: torch.Tensor,
         keys: torch.Tensor,
         values: torch.Tensor,
+        attention_scale: Optional[torch.Tensor] = None,
         attention_bias: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """Apply the decoder on the embeddings.
@@ -68,8 +69,10 @@ class SequenceTransformerBlock(nn.Module):
                 dimension.
             keys (torch.Tensor): (B, S2, E2) where E2 is the keys embedding dimension.
             values (torch.Tensor): (B, S2, E3) where E3 is the values embedding
-            attention_bias (Tensor, optional): (S1, S2) or (B, S1, S2). Defaults to
-                None. This value is added to the scores before the softmax operation.
+            attention_scale (Tensor, optional): (Broadcastable to (B, S1, S2)). Defaults
+                to None. If None, it is set to 1 / sqrt(E1).
+            attention_bias (Tensor, optional): (Broadcastable to (B, S1, S2)). Defaults
+                to None. This value is added to the scores before the softmax operation.
 
         Returns:
             torch.Tensor: (B, S1, E1)
@@ -80,6 +83,7 @@ class SequenceTransformerBlock(nn.Module):
                 self.queries_layer_norm(queries),
                 self.keys_layer_norm(keys),
                 self.values_layer_norm(values),
+                attention_scale=attention_scale,
                 attention_bias=attention_bias,
             )
             + queries
