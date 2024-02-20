@@ -1,7 +1,6 @@
 from typing import Optional
 
 import torch
-from torch import nn
 
 from .attention_bias import (
     get_attention_bias_from_attention_mask,

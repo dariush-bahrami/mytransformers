@@ -1,12 +1,10 @@
 from typing import Optional
 
 import torch
-from torch import nn
 
 from .attention_bias import (
     get_attention_bias_from_attention_mask,
     get_attention_masks_from_ignore_mask,
-    get_causal_attention_mask,
 )
 from .sequence_transformer_block import SequenceTransformerBlock
 
