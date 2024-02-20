@@ -3,12 +3,12 @@ from typing import Optional
 import torch
 from torch import nn
 
-from .attention import MultiHeadAttention
-from .feed_forward import PositionWiseFeedForward
+from .multi_head_attention import MultiHeadAttention
+from .position_wise_feed_forward import PositionWiseFeedForward
 
 
-class GeneralMultiHeadAttentionLayer(nn.Module):
-    """General multi-head attention. This module consists of a multi-head attention,
+class SequenceTransformerBlock(nn.Module):
+    """Transformer Layer. This module consists of a multi-head attention,
     layer normalization and feedforward layer.
 
     Args:
@@ -59,7 +59,7 @@ class GeneralMultiHeadAttentionLayer(nn.Module):
         queries: torch.Tensor,
         keys: torch.Tensor,
         values: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_bias: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """Apply the decoder on the embeddings.
 
@@ -68,8 +68,8 @@ class GeneralMultiHeadAttentionLayer(nn.Module):
                 dimension.
             keys (torch.Tensor): (B, S2, E2) where E2 is the keys embedding dimension.
             values (torch.Tensor): (B, S2, E3) where E3 is the values embedding
-            attention_mask (torch.Tensor, optional): (B, S1, S2) The attention mask for
-                the first multi-head attention layer. Defaults to None.
+            attention_bias (Tensor, optional): (S1, S2) or (B, S1, S2). Defaults to
+                None. This value is added to the scores before the softmax operation.
 
         Returns:
             torch.Tensor: (B, S1, E1)
@@ -80,7 +80,7 @@ class GeneralMultiHeadAttentionLayer(nn.Module):
                 self.queries_layer_norm(queries),
                 self.keys_layer_norm(keys),
                 self.values_layer_norm(values),
-                attention_mask,
+                attention_bias=attention_bias,
             )
             + queries
         )
